@@ -140,6 +140,10 @@ def optimize(ds: MeshSampler, encoding_type: EncodingType, model_params: encodin
     model = encoding_controler.get_controlled_model(model_params, encoding_type, control_params, controller_type).to(device).to(device)
     lr = 1e-4
     opt = Optimizer(model.parameters(), lr=lr)
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    pytorch_total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"The number of parameters in this model is {pytorch_total_params}.")
+    print(f"The number of trainable parameters in this model is {pytorch_total_trainable_params}.")
     logger = train_utils.Logger().start(epochs, tag=f"{name} {tag}")
     for i in range(epochs):
         loss_train = 0
@@ -171,15 +175,18 @@ def optimize(ds: MeshSampler, encoding_type: EncodingType, model_params: encodin
 def main():
     device = CUDA(0)
     mesh_path = files_utils.get_source_path()
-    encoding_types = (EncodingType.NoEnc, EncodingType.FF,  EncodingType.FF)
-    controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
+    # encoding_types = (EncodingType.NoEnc, EncodingType.FF,  EncodingType.FF)
+    encoding_type = EncodingType.FF
+    # controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
+    controller_type = ControllerType.SpatialProgressionStashed
     std = 20
     ds = MeshSampler(mesh_path, device)
     control_params = encoding_controler.ControlParams(num_iterations=500, epsilon=1e-1, res=64)
     model_params = encoding_models.ModelParams(domain_dim=3, output_channels=1, std=std, hidden_dim=256,
                                                num_layers=4, num_frequencies=256)
-    for encoding_type, controller_type in zip(encoding_types, controller_types):
-        optimize(ds, encoding_type, model_params, controller_type, control_params, device, 25, verbose=False)
+    # for encoding_type, controller_type in zip(encoding_types, controller_types):
+    #     optimize(ds, encoding_type, model_params, controller_type, control_params, device, 25, verbose=False)
+    optimize(ds, encoding_type, model_params, controller_type, control_params, device, 25, verbose=False)
 
 
 if __name__ == '__main__':

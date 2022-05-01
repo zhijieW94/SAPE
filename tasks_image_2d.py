@@ -41,6 +41,10 @@ def optimize(image_path: Union[ARRAY, str], encoding_type: EncodingType, model_p
     block_iterations = model.block_iterations
     vs_base, vs_in, labels, image_labels = vs_base.to(device), vs_in.to(device), labels.to(device), image_labels.to(device)
     opt = Optimizer(model.parameters(), lr=lr)
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    pytorch_total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"The number of parameters in this model is {pytorch_total_params}.")
+    print(f"The number of trainable parameters in this model is {pytorch_total_trainable_params}.")
     logger = train_utils.Logger().start(control_params.num_iterations, tag=tag)
     files_utils.export_image(target_image, f'{out_path}target.png')
     if masked_image is not None:
@@ -85,11 +89,15 @@ def main() -> int:
     model_params = encoding_models.ModelParams(domain_dim=2, output_channels=3, num_freqs=256,
                                                hidden_dim=256, std=20., num_layers=3)
     control_params = encoding_controler.ControlParams(num_iterations=5000, epsilon=1e-3, res=128)
-    encoding_types = (EncodingType.NoEnc, EncodingType.FF, EncodingType.FF)
-    controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
-    for encoding_type, controller_type in zip(encoding_types, controller_types):
-        optimize(image_path, encoding_type, model_params, controller_type, control_params, group, device,
-                 50, verbose=True)
+    # encoding_types = (EncodingType.NoEnc, EncodingType.FF, EncodingType.FF)
+    # controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
+    encoding_type = EncodingType.FF
+    controller_type = ControllerType.SpatialProgressionStashed
+    # for encoding_type, controller_type in zip(encoding_types, controller_types):
+    #     optimize(image_path, encoding_type, model_params, controller_type, control_params, group, device,
+    #              50, verbose=True)
+    optimize(image_path, encoding_type, model_params, controller_type, control_params, group, device,
+                50, verbose=True)
     return 0
 
 
