@@ -113,6 +113,7 @@ def unroll_domain(h: int, w: int) -> T:
     vs_x = torch.linspace(-1, 1., w)
     vs = torch.meshgrid(vs_y, vs_x)
     vs = torch.stack(vs, dim=2)
+    print(vs.shape)
     return vs
 
 

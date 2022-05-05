@@ -4,6 +4,7 @@
 import plyfile
 import skimage.measure
 import time
+import mcubes
 from custom_types import *
 from utils import files_utils
 from utils.train_utils import Logger
@@ -61,15 +62,24 @@ def create_mesh(decoder: Union[nn.Module, Callable[[T], T]], filename, res=256, 
     end = time.time()
     # print("sampling took: %f" % (end - start))
 
-    return convert_sdf_samples_to_ply(
-        sdf_values.data.cpu(),
-        voxel_origin,
-        voxel_size,
-        ply_filename,
-        offset,
-        None,
-        device=device
-    )
+    smoothing_surface = mcubes.smooth(sdf_values.data.cpu().numpy())
+
+    vertices, triangles = mcubes.marching_cubes(smoothing_surface, 0)
+
+    obj_filename_out = files_utils.add_suffix(ply_filename, '.obj')
+
+    mcubes.export_obj(vertices, triangles, obj_filename_out)
+
+    # return convert_sdf_samples_to_ply(
+    #     sdf_values.data.cpu(),
+    #     voxel_origin,
+    #     voxel_size,
+    #     ply_filename,
+    #     offset,
+    #     None,
+    #     device=device
+    # )
+    return 0
 
 
 def convert_sdf_samples_to_ply(pytorch_3d_sdf_tensor, voxel_grid_origin, voxel_size,
