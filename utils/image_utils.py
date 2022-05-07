@@ -113,14 +113,13 @@ def unroll_domain(h: int, w: int) -> T:
     vs_x = torch.linspace(-1, 1., w)
     vs = torch.meshgrid(vs_y, vs_x)
     vs = torch.stack(vs, dim=2)
-    print(vs.shape)
     return vs
 
 
 def random_sampling(image: ARRAY, scale: Union[float, int], non_uniform_sampling=False):
     h, w, c = image.shape
     coords = unroll_domain(h, w).view(-1, 2)
-    labels = torch.from_numpy(image).reshape(-1, c).float() / 255
+    labels = torch.from_numpy(image).reshape(-1, c).float() / 255 # labels [0, 1]
     masked_image = labels.clone()
 
     if scale < 1:
@@ -139,15 +138,15 @@ def random_sampling(image: ARRAY, scale: Union[float, int], non_uniform_sampling
         masked[select] = 0
         masked = torch.nonzero(masked).squeeze(-1)
     else:
-        select = torch.rand(h * w).argsort()
+        select = torch.rand(h * w).argsort() # returns the indices [0, h * w - 1]
         masked = select[split:]
-        select = select[:split]
+        select = select[:split] # use the first scale * total indices
 
-    sample_cords = coords[select]
+    sample_cords = coords[select] # use the selected random # of coords from [-1,1]
     labels = labels[select]
-    masked_image[masked] = 1
+    masked_image[masked] = 1  # turn the masks part to white [1,1,1]
     masked_image = masked_image.view(h, w, c)
-    return labels, sample_cords, coords, masked_image
+    return labels, sample_cords, coords, masked_image # vs_base: all the coordinates
 
 
 def grid_sampling(image: ARRAY, scale: int):
