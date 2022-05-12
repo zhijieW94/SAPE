@@ -5,6 +5,7 @@ from models import encoding_controler, encoding_models
 from utils import files_utils, train_utils, image_utils
 import constants
 from torch.utils.data import TensorDataset
+from torch.utils.tensorboard import SummaryWriter
 
 
 def plot_image(model: encoding_controler.EncodedController, vs_in: T, ref_image: ARRAY):
@@ -38,12 +39,12 @@ def optimize(image_path: Union[ARRAY, str], encoding_type: EncodingType, model_p
 
     patch_size = 24704
 
-    
     name = files_utils.split_path(image_path)[1]
     vs_base, vs_in, labels, target_image, image_labels, masked_image = group
     print(f"The sample size is : {vs_in.shape[0]}.")
     tag = f'{name}_{encoding_type.value}_{controller_type.value}'
     out_path = f'{constants.CHECKPOINTS_ROOT}/2d_images/{name}/'
+    writer = SummaryWriter(out_path)
     lr = 1e-3
     model = encoding_controler.get_controlled_model(model_params, encoding_type, control_params, controller_type).to(device)
     block_iterations = model.block_iterations
@@ -79,6 +80,7 @@ def optimize(image_path: Union[ARRAY, str], encoding_type: EncodingType, model_p
         if block_iterations > 0 and (j + 1) % block_iterations == 0:
             model.update_progress()
         if (j + 1) % freq == 0 and verbose:
+            writer.add_scalar('MSE', loss.item(), j)
             with torch.no_grad():
                 # out, hm = plot_image(model, vs_base, target_image)
                 # if hm is not None:
@@ -95,6 +97,7 @@ def optimize(image_path: Union[ARRAY, str], encoding_type: EncodingType, model_p
                 model.train()
         logger.reset_iter()
     logger.stop()
+    writer.close()
     files_utils.save_model(model, f'{out_path}model_{tag}.pth')
     if verbose:
         # image_utils.gifed(f'{out_path}opt_{tag}/', .07, tag, reverse=False)

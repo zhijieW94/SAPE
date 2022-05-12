@@ -157,16 +157,19 @@ def psine(x: T):
 
 def main() -> int:
     device = CUDA(0)
-    encoding_types = (EncodingType.NoEnc, EncodingType.FF, EncodingType.FF)
-    controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
+    # encoding_types = (EncodingType.NoEnc, EncodingType.FF, EncodingType.FF)
+    encoding_type = EncodingType.FF
+    # controller_types = (ControllerType.NoControl, ControllerType.NoControl, ControllerType.SpatialProgressionStashed)
+    controller_type = ControllerType.SpatialProgressionStashed
     func = Function(psine)
     num_samples = 25
     control_params = encoding_controler.ControlParams(num_iterations=20000, epsilon=1e-5, res=num_samples//2)
     model_params = encoding_models.ModelParams(domain_dim=1, output_channels=1, num_freqs=256,
                                                hidden_dim=32, std=5., num_layers=2)
 
-    for encoding_type, controller_type in zip(encoding_types, controller_types):
-        optimize(func, encoding_type, model_params, controller_type, control_params, num_samples, device, freq=25, verbose=True)
+    # for encoding_type, controller_type in zip(encoding_types, controller_types):
+    #     optimize(func, encoding_type, model_params, controller_type, control_params, num_samples, device, freq=25, verbose=True)
+    optimize(func, encoding_type, model_params, controller_type, control_params, num_samples, device, freq=25, verbose=True)
     return 0
 
 

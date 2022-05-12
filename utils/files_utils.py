@@ -16,6 +16,9 @@ import plyfile
 def get_sys_args():
     return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
+def get_source_path():
+    return sys.argv[1]
+
 
 def export_image(image: Union[T, ARRAY], path: str):
     if type(image) is T:
